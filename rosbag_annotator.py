@@ -3,6 +3,7 @@ import roslib
 import cv2
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import LaserScan
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 from std_msgs.msg import String
@@ -14,8 +15,11 @@ import threading
 import rosbag
 import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 import argparse
 import textwrap
+import math
+
 
 global pause
 global framerate
@@ -53,7 +57,7 @@ def parse_arguments():
 		\t->: Increase playback speed
 		'''))
 	parser.add_argument('-i', '--input-file',    required=True,  nargs='?', help="rosbag file, absolute path")
-	parser.add_argument('-vt', '--visual-topic', required=True,  nargs='?', help="topic to be used for visual annotation, e.g. /camera/rgb/image_raw")
+	parser.add_argument('-st', '--scan-topic', required=True,  nargs='?', help="topic to be used for scan annotation, e.g. /scan")
 	parser.add_argument('-c', '--csv-file',  nargs='?', help="csv file with bounded boxes of the bag played")
 	parser.add_argument('-o', '--output-file',  nargs='?', help="output annotation result file")
 	parser.add_argument('-a', '--append', default=False, help="append result file instead of creating new", action='store_true')
@@ -80,6 +84,7 @@ def mouse_cb(event, x , y, flags, param):
 def setCounter(x, counter):
 	counter = x	
 	print current
+
 	
 def play_bag_file(bag_file, csv_file):
 	global pause
@@ -91,7 +96,9 @@ def play_bag_file(bag_file, csv_file):
 	global mouse_loc
 	global prev_mouse_loc
 	global start_rect
-	
+
+
+	compressed = False
 	bag = rosbag.Bag(bag_file)
 	info_dict = yaml.load(bag._get_yaml_info())
 	topics =  info_dict['topics']
@@ -112,7 +119,14 @@ def play_bag_file(bag_file, csv_file):
 	else:
 		compressed = False
 		
-	#Get framerate	
+	#Get framerate
+	ranges = []
+	theta = []
+	sx = []
+	sy = []
+	sz = []
+
+
 	framerate = messages/duration
 	step = framerate/5
 	
@@ -143,7 +157,8 @@ def play_bag_file(bag_file, csv_file):
 		if counter == 0:
 			start_time = t
 			
-		#Get the image
+		#Get the scan
+		'''
 		if not compressed:
 			try:
 				cv_image = bridge.imgmsg_to_cv2(msg, "bgr8")
@@ -152,20 +167,54 @@ def play_bag_file(bag_file, csv_file):
 		else:
 			nparr = np.fromstring(msg.data, np.uint8)
 			cv_image = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
+		'''
+
+		dt=(msg.angle_max-msg.angle_min)/msg.angle_increment
+		
+		#Create a black image
+		img = np.zeros((512,512,3), np.uint8)
+
+		i=0
+
+		#polar 
+		angle=msg.angle_min
+		while angle < msg.angle_max:
+			#trangle=math.degrees(angle)
+			theta.append(angle)
+			angle=angle+msg.angle_increment
+			#print theta
+			#print msg.ranges
 			
-		try:
-			line = csv.readline()
-			(x, y, width, height) = map(int, line.split('\t')[index:index + 4])
-			box_buff.append((x, y, width, height))		
-		except Exception as e:
-			pass
+
+			#polar to cartesian
+			x=msg.ranges[i]*np.cos(angle)
+			y=msg.ranges[i]*np.sin(angle)
+
+			sx.append(x)
+			sy.append(y)
+
+			#PLot the points using openCV
+			#img = cv2.circle(img,(x,y),angle,(0,255,0), -1)
+
+			i=i+1
+
+		#Plot the points using matplotlib
+		plt.plot(sx,sy,'o')
+		plt.show()
+		
+		
+		#try:
+		#	line = csv.readline()
+		#	(x, y, width, height) = map(int, line.split('\t')[index:index + 4])
+		#	box_buff.append((x, y, width, height))		
+		#except Exception as e:
+		#	pass
 				
 		image_buff.append(cv_image)
 		time_buff.append(t.to_sec() - start_time.to_sec())
 		counter += 1
-	
-	
-			
+		
+
 	counter = 0
 	
 	#Loop through the image buffer
@@ -271,14 +320,13 @@ def keyPressed(time_buff, file_obj, key = None):
 			pause = False
 		else:
 			pause = True
-			
 
 if __name__ =='__main__':
 	args = parse_arguments()
 	bag_file = args.input_file
 	csv_file = args.csv_file
 	output_file = args.output_file
-	input_topic = args.visual_topic
+	input_topic = args.scan_topic
 	append = args.append
 	
 	#Create results file
@@ -294,4 +342,3 @@ if __name__ =='__main__':
 	
 	#Open bag and get framerate	
 	play_bag_file(bag_file, csv_file)
-
