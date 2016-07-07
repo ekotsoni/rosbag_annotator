@@ -37,6 +37,7 @@ mouse_loc = None
 prev_mouse_loc = None
 start_rect = 2*[None]
 
+
 def parse_arguments():
 	parser = argparse.ArgumentParser(
 		prog='PROG',
@@ -148,77 +149,41 @@ def play_bag_file(bag_file, csv_file):
 			if 'Rect_x' in field:
 				break
 			index += 1
-			
-	laserDistances = []			
-
 
 	#Loop through the rosbag
+			
+	laserDistances = []			
+	
 	for topic, msg, t in bag.read_messages(topics=[input_topic]):
-		if counter == 0:
-			start_time = t
-		
 		#Get the scan
-		'''
-		if not compressed:
-			try:
-				cv_image = bridge.imgmsg_to_cv2(msg, "bgr8")
-			except CvBridgeError as e:
-				print e
-		else:
-			nparr = np.fromstring(msg.data, np.uint8)
-			cv_image = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
-		'''
-
-		dt=(msg.angle_max-msg.angle_min)/msg.angle_increment
-		
 		laserDistances.append(np.array(msg.ranges))
 		theta = np.arange(msg.angle_min, msg.angle_max + msg.angle_increment, msg.angle_increment)
-		theta = np.degrees(theta)		
-		sx = np.cos(np.radians(theta)) * laserDistances[-1]
-		sy = np.sin(np.radians(theta)) * laserDistances[-1]
-		'''
-		while angle < msg.angle_max:
-			trangle=math.degrees(angle)
-			theta.append(trangle)
-			r=msg.ranges[i]
-			sr.append(r)
-			angle=angle+msg.angle_increment
-			#print theta
-			#print msg.ranges
-			
-
-			#polar to cartesian
-			x=msg.ranges[i]*np.cos(angle)
-			y=msg.ranges[i]*np.sin(angle)
-
-			sx.append(x)
-			sy.append(y)
-
-			i=i+1
-		'''
+		theta = np.degrees(theta)
+	
+	fig=plt.figure()
+	for i in range(len(laserDistances)):
+		if counter == 0:
+			start_time = t
+		#dt=(msg.angle_max-msg.angle_min)/msg.angle_increment		
+		sx = np.cos(np.radians(theta)) * laserDistances[i]
+		sy = np.sin(np.radians(theta)) * laserDistances[i]
 
 		#Plot the points using matplotlib
 		plt.clf()
-		#stringTitle = "{0:.2f} secs".format(t)
-		plt.subplot(211)
-		plt.plot(theta, laserDistances[-1],'o')
-		plt.subplot(212)
-		plt.plot(sx,sy,'o')		
-		plt.title(counter)
+		ax1=fig.add_subplot(211)
+		ax1.plot(theta, laserDistances[i],'o')
+		ax2=fig.add_subplot(212)
+		ax2.plot(sx,sy,'o')		
 		plt.draw()
 		plt.pause(0.05)
 		
-		#try:
-		#	line = csv.readline()
-		#	(x, y, width, height) = map(int, line.split('\t')[index:index + 4])
-		#	box_buff.append((x, y, width, height))		
-		#except Exception as e:
-		#	pass
-				
-		#image_buff.append(cv_image)
-		#time_buff.append(t.to_sec() - start_time.to_sec())
 		counter += 1
+	'''
 		
+	
+
+	plt.draw()
+	'''
 
 	counter = 0
 	'''
@@ -235,7 +200,7 @@ def play_bag_file(bag_file, csv_file):
 		except Exception as e:
 			pass
 			
-		#Display image
+		#Display 
 		cv2.imshow("Image", cv_image)
 		keyPressed(time_buff, file_obj)
 
