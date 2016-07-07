@@ -122,9 +122,6 @@ def play_bag_file(bag_file, csv_file):
 	#Get framerate
 	ranges = []
 	theta = []
-	sx = []
-	sy = []
-	sz = []
 
 
 	framerate = messages/duration
@@ -152,11 +149,14 @@ def play_bag_file(bag_file, csv_file):
 				break
 			index += 1
 			
+	laserDistances = []			
+
+
 	#Loop through the rosbag
 	for topic, msg, t in bag.read_messages(topics=[input_topic]):
 		if counter == 0:
 			start_time = t
-			
+		
 		#Get the scan
 		'''
 		if not compressed:
@@ -171,16 +171,17 @@ def play_bag_file(bag_file, csv_file):
 
 		dt=(msg.angle_max-msg.angle_min)/msg.angle_increment
 		
-		#Create a black image
-		img = np.zeros((512,512,3), np.uint8)
-
-		i=0
-
-		#polar 
-		angle=msg.angle_min
+		laserDistances.append(np.array(msg.ranges))
+		theta = np.arange(msg.angle_min, msg.angle_max + msg.angle_increment, msg.angle_increment)
+		theta = np.degrees(theta)		
+		sx = np.cos(np.radians(theta)) * laserDistances[-1]
+		sy = np.sin(np.radians(theta)) * laserDistances[-1]
+		'''
 		while angle < msg.angle_max:
-			#trangle=math.degrees(angle)
-			theta.append(angle)
+			trangle=math.degrees(angle)
+			theta.append(trangle)
+			r=msg.ranges[i]
+			sr.append(r)
 			angle=angle+msg.angle_increment
 			#print theta
 			#print msg.ranges
@@ -193,15 +194,19 @@ def play_bag_file(bag_file, csv_file):
 			sx.append(x)
 			sy.append(y)
 
-			#PLot the points using openCV
-			#img = cv2.circle(img,(x,y),angle,(0,255,0), -1)
-
 			i=i+1
+		'''
 
 		#Plot the points using matplotlib
-		plt.plot(sx,sy,'o')
-		plt.show()
-		
+		plt.clf()
+		#stringTitle = "{0:.2f} secs".format(t)
+		plt.subplot(211)
+		plt.plot(theta, laserDistances[-1],'o')
+		plt.subplot(212)
+		plt.plot(sx,sy,'o')		
+		plt.title(counter)
+		plt.draw()
+		plt.pause(0.05)
 		
 		#try:
 		#	line = csv.readline()
@@ -210,13 +215,13 @@ def play_bag_file(bag_file, csv_file):
 		#except Exception as e:
 		#	pass
 				
-		image_buff.append(cv_image)
-		time_buff.append(t.to_sec() - start_time.to_sec())
+		#image_buff.append(cv_image)
+		#time_buff.append(t.to_sec() - start_time.to_sec())
 		counter += 1
 		
 
 	counter = 0
-	
+	'''
 	#Loop through the image buffer
 	for current in range(len(image_buff)):
 		current = counter
@@ -264,7 +269,7 @@ def play_bag_file(bag_file, csv_file):
 					start_rect = 2*[None]
 		counter += 1
 		start_rect = 2*[None]
-	
+	'''
 	if csv_file is not None and os.path.exists(csv_file):	
 		input_file  = open(csv_file, 'r')
 		output_file = open(csv_file.split(".")[0] + "_out.csv", 'w')
