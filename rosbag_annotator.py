@@ -22,10 +22,9 @@ import math
 import qt_laserscan
 
 
-
-
 programmName = os.path.basename(sys.argv[0])
 laserDistances = []
+theta = []
 sx = []
 sy = []
 
@@ -61,6 +60,7 @@ def setCounter(x, counter):
 	print current
 
 def play_bag_file(bag_file, csv_file):
+	global laserDistances, sx, sy, theta
 
 	compressed = False
 	bag = rosbag.Bag(bag_file)
@@ -70,19 +70,19 @@ def play_bag_file(bag_file, csv_file):
 	messages =  topic['messages']
 	duration = info_dict['duration']
 	topic_type = topic['type']
-		
+
 	#Messages for test
 	print "Script parameters: ","\n\t- Bag file: ", bag_file, "\n\t- Topic: ", input_topic, 
 	print "\nRosbag topics found: "
 	for top in topics:
 		print "\t- ", top["topic"], "\n\t\t-Type: ", topic["type"],"\n\t\t-Fps: ", topic["frequency"]
-		
+
 	#Checking if the topic is compressed
 	if 'CompressedImage' in topic_type:
 		compressed = True
 	else:
 		compressed = False
-		
+
 	#Get framerate
 
 	bridge = CvBridge()
@@ -94,20 +94,16 @@ def play_bag_file(bag_file, csv_file):
 	file_obj = open(feature_file, 'a')
 
 	#Loop through the rosbag
-
-			
-
 	for topic, msg, t in bag.read_messages(topics=[input_topic]):
 		#Get the scan
 		laserDistances.append(np.array(msg.ranges))
+		#laserDistances.append(np.array(msg.ranges,dtype=float))
 		theta = np.arange(msg.angle_min, msg.angle_max + msg.angle_increment, msg.angle_increment)
 		theta = np.degrees(theta)
 		sx.append(np.cos(np.radians(theta)) * laserDistances[-1])
 		sy.append(np.sin(np.radians(theta)) * laserDistances[-1])
 
 	bag.close()
-
-
 
 if __name__ =='__main__':
 
@@ -117,7 +113,7 @@ if __name__ =='__main__':
 	output_file = args.output_file
 	input_topic = args.scan_topic
 	append = args.append
-	
+
 	#Create results file
 	if(output_file is None):
 		feature_file = bag_file.split(".")[0].split("/")[-1] + "_RES"
@@ -128,8 +124,8 @@ if __name__ =='__main__':
 		os.remove(feature_file)
 
 	print feature_file
-	for i in range(len(laserDistances)):
-		qt_laserscan.run(laserDistances[i],theta,sx[i],sy[i])
 
 	#Open bag and get framerate	
 	play_bag_file(bag_file, csv_file)
+
+	qt_laserscan.run(laserDistances, theta, sx, sy)
