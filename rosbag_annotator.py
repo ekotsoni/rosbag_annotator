@@ -97,7 +97,6 @@ def play_bag_file(bag_file, csv_file):
 	for topic, msg, t in bag.read_messages(topics=[input_topic]):
 		#Get the scan
 		laserDistances.append(np.array(msg.ranges))
-		#laserDistances.append(np.array(msg.ranges,dtype=float))
 		theta = np.arange(msg.angle_min, msg.angle_max + msg.angle_increment, msg.angle_increment)
 		theta = np.degrees(theta)
 		sx.append(np.cos(np.radians(theta)) * laserDistances[-1])
