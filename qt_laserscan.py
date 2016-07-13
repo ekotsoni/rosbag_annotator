@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import matplotlib
+import matplotlib.pyplot as plt
 import time
 # Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
@@ -28,16 +29,19 @@ fig = None
 axes1 = None
 axes2 = None
 smth = None
-cnt = 0
-
+cnt= 0
+timer = None
+line1 = None
+line2 = None
+#ix = 0
+#iy = 0
 
 class Window(FigureCanvas):
 
     def __init__(self, parent=None, width=20, height=6, dpi=100):
-        global axes1
-        global axes2
+        global axes1,axes2,line1,line2
         global fig
-        global smth
+        global smth,cnt
 
         smth = self
 
@@ -64,24 +68,35 @@ class Window(FigureCanvas):
 class LS(Window):
     global laserDistances
     global theta
+    global sx,sy
+    global fig
+    global axes1,axes2,line1,line2
+    global smth, cnt
+
+    def figure(self,laserDistances, theta, sx, sy,fig):
+        cnt = 0
+        '''
+        if(cnt<len(laserDistances)):
+            axes1.clear()
+            axes2.clear()
+            axes1.plot(laserDistances[cnt],theta,'o')
+            #axes1.hold()
+            axes2.plot(sx[cnt],sy[cnt],'o')
+            #axes2.hold()
+            #smth.draw()
+            cnt += 1
+        '''
+
+
+class ApplicationWindow(QtWidgets.QMainWindow):
+    global laserDistances
+    global theta
     global sx
     global sy
     global fig
-    global axes1
-    global axes2
-
-    def figure(self,laserDistances, theta, sx, sy,fig):
-        '''
-        for i in range(len(laserDistances)):
-            axes1.clear()
-            axes2.clear()
-            axes1.plot(laserDistances[i],theta,'o')
-            #axes1.hold()
-            axes2.plot(sx[i],sy[i],'o')
-            #axes2.hold()
-        '''
-
-class ApplicationWindow(QtWidgets.QMainWindow):
+    global axes1,line1
+    global axes2,line2
+    global smth, cnt
 
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -136,12 +151,49 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         layout.addLayout(classLayout)
 
         #Define Connections
-        #playButton.clicked.connect(play)
-        #pauseButton.clicked.connect(self.player.pause)
-        #stopButton.clicked.connect(self.player.stop)
+        playButton.clicked.connect(self.bplay)
+        pauseButton.clicked.connect(self.bpause)
+        stopButton.clicked.connect(self.bstop)
+        annotationButton.clicked.connect(self.bannotation)
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
+
+    def bplay(self):
+        ptime()
+
+    def bpause(self):
+        global timer
+        timer.stop()
+
+    def bstop(self):
+        global cnt,timer
+        global axes1,axes2
+        global smth
+        cnt = 0
+        timer.stop()
+        axes1.clear()
+        axes2.clear()
+        smth.draw()
+
+    def bannotation(self):
+        eventFilter()
+
+    #def mousePressEvent(self, QMouseEvent):
+    #    print QMouseEvent.pos()
+
+    #def mouseReleaseEvent(self, QMouseEvent):
+    #    cursor = QtGui.QCursor()
+    #    print cursor.pos()
+
+    def eventFilter(self, source, event):
+        if (event.type() == QtCore.QEvent.MouseMove and event.buttons() == QtCore.Qt.NoButton):
+            pos = event.pos()
+            self.label.setText('Please click on screen. ( %d : %d )' % (pos.x(), pos.y()))
+        elif event.type() == QtCore.QEvent.MouseButtonPress:
+            pos = event.pos()
+            print('( %d : %d )' % (pos.x(), pos.y()))
+        return QtGui.QWidget.eventFilter(self, source, event)
 
 
     def fileQuit(self):
@@ -150,12 +202,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def closeEvent(self, ce):
         self.fileQuit()
 
+def ptime():
+    global timer
+
+    timer.timeout.connect(icon)
+    timer.start(0.0000976562732)
+
+
 def run(laserDistance,angles,laserx,lasery):
     global laserDistances
     global theta
-    global sx
-    global sy
+    global sx,sy
+    global smth,cnt,timer
 
+    timer = QtCore.QTimer(None)
     laserDistances = laserDistance
     theta = angles
     sx = laserx
@@ -168,11 +228,8 @@ def run(laserDistance,angles,laserx,lasery):
     s.setWindowTitle('Laser Scan')
     #s.setWindowTitle("%s" % progname)
     s.show()
-
-    timer = QtCore.QTimer(None)
-    timer.timeout.connect(icon)
-    timer.start(0.0000976562732)
     sys.exit(qApp.exec_())
+
 
 def icon():
     global laserDistances
@@ -180,8 +237,8 @@ def icon():
     global sx
     global sy
     global fig
-    global axes1
-    global axes2
+    global axes1,line1
+    global axes2,line2
     global smth, cnt
 
 
@@ -189,9 +246,10 @@ def icon():
     if(cnt<len(laserDistances)):
         axes1.clear()
         axes2.clear()
-        axes1.plot(laserDistances[cnt],theta,'o')
+        line1 = axes1.plot(laserDistances[cnt],theta,'o')
         #axes1.hold()
-        axes2.plot(sx[cnt],sy[cnt],'o')
+        line2 = axes2.plot(sx[cnt],sy[cnt],'o')
         #axes2.hold()
         smth.draw()
         cnt += 1
+
