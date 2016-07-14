@@ -4,6 +4,7 @@ import random
 import matplotlib
 import matplotlib.pyplot as plt
 import time
+import math
 # Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -12,6 +13,7 @@ from PyQt5.QtMultimedia import (QMediaContent,
         QMediaMetaData, QMediaPlayer, QMediaPlaylist, QAudioOutput, QAudioFormat)
 from PyQt5.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QPushButton,
 QSizePolicy, QVBoxLayout, QWidget)
+from PyQt5.QtGui import QPainter, QColor, QFont
 
 
 from numpy import arange
@@ -35,11 +37,15 @@ line1 = None
 line2 = None
 #ix = 0
 #iy = 0
+c1 = []
+c2 = []
+firstclick = False
+secondclick = False
 
 class Window(FigureCanvas):
 
     def __init__(self, parent=None, width=20, height=6, dpi=100):
-        global axes1,axes2,line1,line2
+        global axes1,axes2
         global fig
         global smth,cnt
 
@@ -70,7 +76,7 @@ class LS(Window):
     global theta
     global sx,sy
     global fig
-    global axes1,axes2,line1,line2
+    global axes1,axes2
     global smth, cnt
 
     def figure(self,laserDistances, theta, sx, sy,fig):
@@ -94,8 +100,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     global sx
     global sy
     global fig
-    global axes1,line1
-    global axes2,line2
+    global axes1
+    global axes2
     global smth, cnt
 
     def __init__(self):
@@ -177,25 +183,64 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         smth.draw()
 
     def bannotation(self):
-        eventFilter()
+        fig.canvas.mpl_connect('button_press_event', self.onCLick)
 
-    #def mousePressEvent(self, QMouseEvent):
-    #    print QMouseEvent.pos()
+    def onCLick(self,event):
+        global c1,c2
+        global firstclick,secondclick
+        global axes1
+        x = event.x
+        y = event.y
+        if event.button == 1:
+            if firstclick == False:
+                if event.inaxes is not None:
+                    c1 = [event.xdata, event.ydata]
+                    firstclick = True
+            elif secondclick == False:
+                if event.inaxes is not None:
+                    c2 = [event.xdata, event.ydata]
+                    secondclick = True
+                    centerX=abs(c2[0]-c1[0])
+                    centerY=abs(c2[1]-c2[1])
+                    th=[0,pi/50,range(2*pi)]
+                    print th
 
-    #def mouseReleaseEvent(self, QMouseEvent):
-    #    cursor = QtGui.QCursor()
-    #    print cursor.pos()
+                    '''
+                    if (x1<x2):
+                        a = x1
+                    else:
+                        a = x2
+                    if (y1<y2):
+                        b = y1
+                    else:
+                        b = y2
+                    width = x2-a
+                    hight = y2 -b
+                    '''
+                    #self.drawRect(x1,y1,width,hight)
+                    #firstclick = False
+                    #secondclick = False
+    '''
+    def paintEvent(self,event):
+        global secondclick,c1,c2
+        print 'mpainw alla de sto lew'
+        if secondclick == True:
+            qp = QPainter()
+            qp.begin(self)
+            qp.setPen(QColor(Qt.red))
+            w = c2[0]-c1[0]
+            h = c1[1]-c2[1]
+            qp.drawRect(c1[0],c1[1],w,h)
+            qp.end()
 
-    def eventFilter(self, source, event):
-        if (event.type() == QtCore.QEvent.MouseMove and event.buttons() == QtCore.Qt.NoButton):
-            pos = event.pos()
-            self.label.setText('Please click on screen. ( %d : %d )' % (pos.x(), pos.y()))
-        elif event.type() == QtCore.QEvent.MouseButtonPress:
-            pos = event.pos()
-            print('( %d : %d )' % (pos.x(), pos.y()))
-        return QtGui.QWidget.eventFilter(self, source, event)
-
-
+    def onPick(self,event):
+        thisline = event.artist
+        xdata = thisline.get_xdata()
+        ydata = thisline.get_ydata()
+        ind = event.ind
+        points = tuple(zip(xdata[ind], ydata[ind]))
+        print('onpick points:', points)
+    '''
     def fileQuit(self):
         self.close()
 
@@ -237,8 +282,8 @@ def icon():
     global sx
     global sy
     global fig
-    global axes1,line1
-    global axes2,line2
+    global axes1
+    global axes2
     global smth, cnt
 
 
@@ -246,10 +291,9 @@ def icon():
     if(cnt<len(laserDistances)):
         axes1.clear()
         axes2.clear()
-        line1 = axes1.plot(laserDistances[cnt],theta,'o')
+        axes1.plot(laserDistances[cnt],theta,'o')
         #axes1.hold()
-        line2 = axes2.plot(sx[cnt],sy[cnt],'o')
+        axes2.plot(sx[cnt],sy[cnt],'o')
         #axes2.hold()
         smth.draw()
         cnt += 1
-
