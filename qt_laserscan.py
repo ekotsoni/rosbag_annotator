@@ -5,15 +5,15 @@ import matplotlib
 import matplotlib.pyplot as plt
 import time
 import math
+#rom scipy import spatial
+
 # Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QUrl, pyqtSignal, QFile, QIODevice
-from PyQt5.QtMultimedia import (QMediaContent,
-        QMediaMetaData, QMediaPlayer, QMediaPlaylist, QAudioOutput, QAudioFormat)
 from PyQt5.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QPushButton,
 QSizePolicy, QVBoxLayout, QWidget)
-from PyQt5.QtGui import QPainter, QColor, QFont
+from PyQt5.QtGui import * #QPainter, QColor, QFont
 
 
 from numpy import arange
@@ -35,12 +35,12 @@ cnt= 0
 timer = None
 line1 = None
 line2 = None
-#ix = 0
-#iy = 0
+
 c1 = []
 c2 = []
 firstclick = False
 secondclick = False
+oriz = []
 
 class Window(FigureCanvas):
 
@@ -52,13 +52,11 @@ class Window(FigureCanvas):
         smth = self
 
         fig = Figure(figsize=(width, height), dpi=dpi)
-        #self.axes = fig.add_subplot(111)
 
-        #self.axes.hold(False)
         axes1=fig.add_subplot(211)
-        #axes1.hold(False)
+
         axes2=fig.add_subplot(212)
-        #axes2.hold(False)
+
 
         self.figure(laserDistances,theta,sx,sy, fig) 
 
@@ -80,7 +78,6 @@ class LS(Window):
     global smth, cnt
 
     def figure(self,laserDistances, theta, sx, sy,fig):
-        cnt = 0
         '''
         if(cnt<len(laserDistances)):
             axes1.clear()
@@ -129,6 +126,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pauseButton = QPushButton("Pause")
         stopButton = QPushButton("Stop")
         annotationButton = QPushButton("Annotation")
+        prevFrameButton = QPushButton("Previous")
+        nextFrameButton = QPushButton("Next")
 
         classes = QComboBox()
         classes.addItem('Selections')
@@ -140,6 +139,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         buttonLayout.addWidget(playButton)
         buttonLayout.addStretch(1)
         buttonLayout.addWidget(pauseButton)
+        buttonLayout.addStretch(1)
+        buttonLayout.addWidget(prevFrameButton)
+        #buttonLayout.addStretch(1)
+        buttonLayout.addWidget(nextFrameButton)
         buttonLayout.addStretch(1)
         buttonLayout.addWidget(stopButton)
         buttonLayout.addStretch(1)
@@ -159,6 +162,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         #Define Connections
         playButton.clicked.connect(self.bplay)
         pauseButton.clicked.connect(self.bpause)
+        prevFrameButton.clicked.connect(self.bprevious)
+        nextFrameButton.clicked.connect(self.bnext)
         stopButton.clicked.connect(self.bstop)
         annotationButton.clicked.connect(self.bannotation)
 
@@ -171,6 +176,38 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def bpause(self):
         global timer
         timer.stop()
+
+    def bprevious(self):
+        global cnt
+        global theta,laserDistances,sx,sy
+        if (cnt>0):
+            cnt = cnt-1
+            axes1.clear()
+            axes2.clear()
+            axes1.plot(theta,laserDistances[cnt],'o')
+            axes2.plot(sx[cnt],sy[cnt],'o')
+            smth.draw()
+        else:
+            axes1.clear()
+            axes2.clear()
+            smth.draw()
+
+    def bnext(self):
+        global cnt,smth
+        global theta,laserDistances,sx,sy
+        if (cnt<len(laserDistances)):
+            cnt = cnt+1
+            print cnt
+            axes1.clear()
+            axes2.clear()
+            axes1.plot(theta,laserDistances[cnt],'o')
+            axes2.plot(sx[cnt],sy[cnt],'o')
+            smth.draw()
+        else:
+            axes1.clear()
+            axes2.clear()
+            smth.draw()
+
 
     def bstop(self):
         global cnt,timer
@@ -186,7 +223,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fig.canvas.mpl_connect('button_press_event', self.onCLick)
 
     def onCLick(self,event):
-        global c1,c2
+        global c1,c2,c
         global firstclick,secondclick
         global axes1
         x = event.x
@@ -200,47 +237,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if event.inaxes is not None:
                     c2 = [event.xdata, event.ydata]
                     secondclick = True
-                    centerX=abs(c2[0]-c1[0])
-                    centerY=abs(c2[1]-c2[1])
-                    th=[0,pi/50,range(2*pi)]
-                    print th
+                    icon()
+                    firstclick = False
+                    secondclick = False
 
-                    '''
-                    if (x1<x2):
-                        a = x1
-                    else:
-                        a = x2
-                    if (y1<y2):
-                        b = y1
-                    else:
-                        b = y2
-                    width = x2-a
-                    hight = y2 -b
-                    '''
-                    #self.drawRect(x1,y1,width,hight)
-                    #firstclick = False
-                    #secondclick = False
-    '''
-    def paintEvent(self,event):
-        global secondclick,c1,c2
-        print 'mpainw alla de sto lew'
-        if secondclick == True:
-            qp = QPainter()
-            qp.begin(self)
-            qp.setPen(QColor(Qt.red))
-            w = c2[0]-c1[0]
-            h = c1[1]-c2[1]
-            qp.drawRect(c1[0],c1[1],w,h)
-            qp.end()
 
-    def onPick(self,event):
-        thisline = event.artist
-        xdata = thisline.get_xdata()
-        ydata = thisline.get_ydata()
-        ind = event.ind
-        points = tuple(zip(xdata[ind], ydata[ind]))
-        print('onpick points:', points)
-    '''
     def fileQuit(self):
         self.close()
 
@@ -285,15 +286,30 @@ def icon():
     global axes1
     global axes2
     global smth, cnt
-
+    global oriz,ka9et
 
     #for i in range(len(laserDistances)):
     if(cnt<len(laserDistances)):
         axes1.clear()
         axes2.clear()
-        axes1.plot(laserDistances[cnt],theta,'o')
-        #axes1.hold()
+        axes1.plot(theta,laserDistances[cnt],'o')
         axes2.plot(sx[cnt],sy[cnt],'o')
-        #axes2.hold()
+        axes2.axis('equal')
+        if len(c1)>0:
+            axes2.plot([c1[0],c2[0]],[c1[1],c1[1]],'r')
+            axes2.plot([c2[0],c2[0]],[c1[1],c2[1]],'r')
+            axes2.plot([c2[0],c1[0]],[c2[1],c2[1]],'r')
+            axes2.plot([c1[0],c1[0]],[c2[1],c1[1]],'r')
+            pos = cnt
+            i=c1[0]
+            while (i<c2[0]):
+                #oriz.append(sx[i])
+                #oriz = [sx[i],sy[i]]
+                #distance,index = spatial.KDTree(sy).query(c1)
+                if ((sy[pos]<c1[1]) and (sy[pos]>c2[1])):
+                    axes2.plot(sx[index],sy[index],'r')
+                    smth.draw()
+                i=i+1
+                pos=pos+1
         smth.draw()
         cnt += 1
