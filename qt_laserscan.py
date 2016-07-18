@@ -41,6 +41,8 @@ c2 = []
 firstclick = False
 secondclick = False
 oriz = []
+colorName = None
+txt = None
 
 class Window(FigureCanvas):
 
@@ -76,6 +78,7 @@ class LS(Window):
     global fig
     global axes1,axes2
     global smth, cnt
+    global colorName
 
     def figure(self,laserDistances, theta, sx, sy,fig):
         '''
@@ -131,9 +134,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         classes = QComboBox()
         classes.addItem('Selections')
-        classes.addItem('S1')
-        classes.addItem('S2')
-        classes.addItem('New')
+        classes.addItem('Person1')
+        classes.addItem('Person2')
+        classes.addItem('Other')
 
         buttonLayout = QVBoxLayout()
         buttonLayout.addWidget(playButton)
@@ -166,6 +169,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         nextFrameButton.clicked.connect(self.bnext)
         stopButton.clicked.connect(self.bstop)
         annotationButton.clicked.connect(self.bannotation)
+        classes.activated[str].connect(self.chooseClass)
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
@@ -197,7 +201,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         global theta,laserDistances,sx,sy
         if (cnt<len(laserDistances)):
             cnt = cnt+1
-            print cnt
             axes1.clear()
             axes2.clear()
             axes1.plot(theta,laserDistances[cnt],'o')
@@ -236,11 +239,39 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             elif secondclick == False:
                 if event.inaxes is not None:
                     c2 = [event.xdata, event.ydata]
+                    if(c2[0]<c1[0]):
+                        temp_c = c2
+                        c2 = c1
+                        c1 = temp_c
                     secondclick = True
                     icon()
                     firstclick = False
                     secondclick = False
 
+    def Annotation(self):
+        global colorName
+        fig.drawAnnotation()
+        fig.draw()
+
+    def chooseClass(self, text):
+        global colorName
+        global txt
+        txt=text
+        if text == 'Selections':
+            annotationButton.setEnabled(False)
+        elif text == 'Person1':
+            colorName = 'green'
+            annotationButton.setEnabled(True)
+        elif text == 'Person2':
+            colorName = 'yellow'
+            annotationButton.setEnabled(True)
+        elif text == 'Other':
+            colorName = 'blue'
+            annotationButton.setEnabled(True)
+
+    def NoPerson(self,text):
+        global txt
+        txt = 'Person' + text 
 
     def fileQuit(self):
         self.close()
@@ -286,30 +317,27 @@ def icon():
     global axes1
     global axes2
     global smth, cnt
-    global oriz,ka9et
+    global colorName
 
     #for i in range(len(laserDistances)):
     if(cnt<len(laserDistances)):
         axes1.clear()
         axes2.clear()
-        axes1.plot(theta,laserDistances[cnt],'o')
-        axes2.plot(sx[cnt],sy[cnt],'o')
         axes2.axis('equal')
         if len(c1)>0:
             axes2.plot([c1[0],c2[0]],[c1[1],c1[1]],'r')
             axes2.plot([c2[0],c2[0]],[c1[1],c2[1]],'r')
             axes2.plot([c2[0],c1[0]],[c2[1],c2[1]],'r')
             axes2.plot([c1[0],c1[0]],[c2[1],c1[1]],'r')
-            pos = cnt
-            i=c1[0]
-            while (i<c2[0]):
-                #oriz.append(sx[i])
-                #oriz = [sx[i],sy[i]]
-                #distance,index = spatial.KDTree(sy).query(c1)
-                if ((sy[pos]<c1[1]) and (sy[pos]>c2[1])):
-                    axes2.plot(sx[index],sy[index],'r')
-                    smth.draw()
-                i=i+1
-                pos=pos+1
+            #axes2.plot(sx,sy,color=colorName)
+            #smth.draw()
+            for i in range (len(sx[cnt])):
+                if ((sx[cnt][i] > c1[0]) and (sx[cnt][i]<c2[0]) and ((sy[cnt][i]>c2[1]) and (sy[cnt][i]<c1[1]))):
+                        axes2.plot(sx[cnt][i],sy[cnt][i],'go')
+                else:
+                    axes2.plot(sx[cnt][i],sy[cnt][i],'bo')
+        else:
+            axes1.plot(theta,laserDistances[cnt],'bo')
+            axes2.plot(sx[cnt],sy[cnt],'bo')
         smth.draw()
         cnt += 1
