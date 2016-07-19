@@ -54,11 +54,6 @@ def parse_arguments():
 	parser.add_argument('-a', '--append', default=False, help="append result file instead of creating new", action='store_true')
 	return parser.parse_args()
 
-
-def setCounter(x, counter):
-	counter = x
-	print current
-
 def play_bag_file(bag_file, csv_file):
 	global laserDistances, sx, sy, theta
 

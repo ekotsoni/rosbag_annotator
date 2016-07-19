@@ -43,6 +43,8 @@ secondclick = False
 oriz = []
 colorName = None
 txt = None
+gperson=[]
+annot = []
 
 class Window(FigureCanvas):
 
@@ -92,6 +94,7 @@ class LS(Window):
             #smth.draw()
             cnt += 1
         '''
+
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -169,7 +172,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         nextFrameButton.clicked.connect(self.bnext)
         stopButton.clicked.connect(self.bstop)
         annotationButton.clicked.connect(self.bannotation)
+        #annotationButton.setEnabled(False)
+
         classes.activated[str].connect(self.chooseClass)
+        #classes.activated[str].connect(self.execute)
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
@@ -211,7 +217,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             axes2.clear()
             smth.draw()
 
-
     def bstop(self):
         global cnt,timer
         global axes1,axes2
@@ -226,7 +231,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fig.canvas.mpl_connect('button_press_event', self.onCLick)
 
     def onCLick(self,event):
-        global c1,c2,c
+        global c1,c2
         global firstclick,secondclick
         global axes1
         x = event.x
@@ -248,30 +253,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     firstclick = False
                     secondclick = False
 
-    def Annotation(self):
-        global colorName
-        fig.drawAnnotation()
-        fig.draw()
-
     def chooseClass(self, text):
         global colorName
         global txt
+        global smth,fig
         txt=text
         if text == 'Selections':
             annotationButton.setEnabled(False)
         elif text == 'Person1':
             colorName = 'green'
-            annotationButton.setEnabled(True)
         elif text == 'Person2':
             colorName = 'yellow'
-            annotationButton.setEnabled(True)
         elif text == 'Other':
             colorName = 'blue'
-            annotationButton.setEnabled(True)
+            self.execute()
 
-    def NoPerson(self,text):
-        global txt
-        txt = 'Person' + text 
+    def execute(self):
+        global txt,annot,axes2
+        print txt
+        print colorName
+        la=laserAnn()
+        annot.append([la.bbstart,la.bbend,la.listofpoints,la.annotID])
 
     def fileQuit(self):
         self.close()
@@ -318,8 +320,8 @@ def icon():
     global axes2
     global smth, cnt
     global colorName
+    global gperson
 
-    #for i in range(len(laserDistances)):
     if(cnt<len(laserDistances)):
         axes1.clear()
         axes2.clear()
@@ -329,15 +331,29 @@ def icon():
             axes2.plot([c2[0],c2[0]],[c1[1],c2[1]],'r')
             axes2.plot([c2[0],c1[0]],[c2[1],c2[1]],'r')
             axes2.plot([c1[0],c1[0]],[c2[1],c1[1]],'r')
-            #axes2.plot(sx,sy,color=colorName)
-            #smth.draw()
             for i in range (len(sx[cnt])):
                 if ((sx[cnt][i] > c1[0]) and (sx[cnt][i]<c2[0]) and ((sy[cnt][i]>c2[1]) and (sy[cnt][i]<c1[1]))):
-                        axes2.plot(sx[cnt][i],sy[cnt][i],'go')
+                    axes2.plot(sx[cnt][i],sy[cnt][i],'go')
+                    gperson=[sx[cnt][i],sy[cnt][i]]
                 else:
                     axes2.plot(sx[cnt][i],sy[cnt][i],'bo')
+                #gperson=[sx[cnt][i],sy[cnt][i]]
         else:
             axes1.plot(theta,laserDistances[cnt],'bo')
             axes2.plot(sx[cnt],sy[cnt],'bo')
         smth.draw()
         cnt += 1
+
+class laserAnn:
+    global c1,c2,gperson,txt
+
+    bbstart = []
+    bbend = []
+    listofpoints = []
+    annotID = []
+
+    def __init__(self):
+        self.bbstart.append(c1)
+        self.bbend.append(c2)
+        self.listofpoints.append(gperson)
+        self.annotID.append(txt)
