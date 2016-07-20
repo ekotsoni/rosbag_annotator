@@ -19,7 +19,8 @@ import matplotlib.pyplot as plt
 import argparse
 import textwrap
 import math
-import qt_laserscan
+#import qt_laserscan
+import ls_gui
 
 
 programmName = os.path.basename(sys.argv[0])
@@ -122,4 +123,4 @@ if __name__ =='__main__':
 	#Open bag and get framerate	
 	play_bag_file(bag_file, csv_file)
 
-	qt_laserscan.run(laserDistances, theta, sx, sy)
+	ls_gui.run(laserDistances, theta, sx, sy)
