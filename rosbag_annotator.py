@@ -97,7 +97,7 @@ def play_bag_file(bag_file, csv_file):
 		theta = np.degrees(theta)
 		sx.append(np.cos(np.radians(theta)) * laserDistances[-1])
 		sy.append(np.sin(np.radians(theta)) * laserDistances[-1])
-
+	laserDistances = []
 	bag.close()
 
 if __name__ =='__main__':
@@ -123,4 +123,4 @@ if __name__ =='__main__':
 	#Open bag and get framerate	
 	play_bag_file(bag_file, csv_file)
 
-	ls_gui.run(laserDistances, theta, sx, sy)
+	ls_gui.run(sx, sy)
