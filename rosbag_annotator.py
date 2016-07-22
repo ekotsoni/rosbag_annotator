@@ -123,4 +123,4 @@ if __name__ =='__main__':
 	#Open bag and get framerate	
 	play_bag_file(bag_file, csv_file)
 
-	ls_gui.run(sx, sy)
+	ls_gui.run(sx, sy, bag_file)

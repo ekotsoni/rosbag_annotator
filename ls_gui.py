@@ -48,12 +48,13 @@ colorName = None
 txt = None
 annot = []
 curr_ptr = -1
+data = None
 
 class Window(FigureCanvas):
 
     def __init__(self, parent=None, width=10, height=3, dpi=100):
 
-        global fw,fig,ax
+        global fw,fig,ax,bag_file,data
 
         fw = self
 
@@ -62,6 +63,17 @@ class Window(FigureCanvas):
         #axes1=fig.add_subplot(211)
         #axes2=fig.add_subplot(212)
         ax = fig.add_subplot(111)
+
+        filename = bag_file.replace(".bag", "_laser.csv")
+        if os.path.isfile(filename):
+            with open(filename, 'rb') as data:
+                if os.path.getsize(filename)>1:
+                    read = csv.reader(data)
+                    #for row in read:
+                        #print row
+                        #print (row[0]+"\t \t"+row[1]+"\t \t"+row[3]+"\t \t"+row[4]+"\t \t"+row[5]+"\t \t"+row[6])
+                        #annot.append(row[0],row[1],row[3],row[4],row[5],row[6])
+
 
         FigureCanvas.__init__(self, fig)
         self.setParent(parent)
@@ -77,12 +89,13 @@ class LS(Window):
     def ptime(self):
         global timer
 
+
         timer.timeout.connect(self.icon)
         timer.start(0.0000976562732)
 
     def icon(self):
 
-        global cnt,ax,annot, fw, colorName
+        global cnt,ax,annot, fw, colorName,timer
 
         if(cnt<len(annot)):
             ax.clear()
@@ -92,6 +105,11 @@ class LS(Window):
                 ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
             fw.draw()
             cnt += 1
+        if (cnt == len(annot)):
+            cnt=0
+            timer.stop()
+            ax.clear()
+            fw.draw()
 
     def rect(self):
 
@@ -105,7 +123,8 @@ class LS(Window):
                 ax.plot([c2[0],c1[0]],[c2[1],c2[1]],'r')
                 ax.plot([c1[0],c1[0]],[c2[1],c1[1]],'r')
             fw.draw()
-            cnt += 1
+            #cnt += 1
+
 
 
     def training(self):
@@ -115,18 +134,18 @@ class LS(Window):
         ax.clear()
         if (colorName == 'go'):
             for i in range(len(annot[cnt].samex)):
-                #print annot[cnt].samex[i]
                 if ((annot[cnt].samex[i]>c1[0]) and (annot[cnt].samex[i]<c2[0]) and ((annot[cnt].samey[i]>c2[1]) and (annot[cnt].samey[i]<c1[1]))):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'go')
+                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
                     curr_ptr = i
                     objx = annot[cnt].samex[i]
                     objy = annot[cnt].samey[i]
                 else:
                     ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
-        elif (colorName == 'yo'):
+        elif (colorName == 'ro'):
             for i in range(len(annot[cnt].samex)):
                 if ((annot[cnt].samex[i] > c1[0]) and (annot[cnt].samex[i]<c2[0]) and ((annot[cnt].samey[i]>c2[1]) and (annot[cnt].samey[i]<c1[1]))):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'yo')
+                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
+                    curr_ptr = i
                     objx = annot[cnt].samex[i]
                     objy = annot[cnt].samey[i]
                 else:
@@ -224,6 +243,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         global cnt,ax,fw,colorName, annot
         if (cnt<len(annot)):
             cnt = cnt+1
+            print cnt
             ax.clear()
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
@@ -248,26 +268,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def onCLick(self,event):
 
-        global c1,c2,ax,firstclick,secondclick,scan_widget
+        global c1,c2,ax,firstclick,secondclick,scan_widget,annotating
 
-        x = event.x
-        y = event.y
-        if event.button == 1:
-            if firstclick == False:
-                if event.inaxes is not None:
-                    c1 = [event.xdata,event.ydata]
-                    firstclick = True
-            elif secondclick == False:
-                if event.inaxes is not None:
-                    c2 = [event.xdata,event.ydata]
-                    if (c2[0]<c1[0]):
-                        temp_c = c2
-                        c2 = c1
-                        c1 = temp_c
-                    secondclick = True
-                    scan_widget.rect()
-                    firstclick = False
-                    secondclick = False
+        if annotating:
+            x = event.x
+            y = event.y
+            if event.button == 1:
+                if firstclick == False:
+                    if event.inaxes is not None:
+                        c1 = [event.xdata,event.ydata]
+                        firstclick = True
+                elif secondclick == False:
+                    if event.inaxes is not None:
+                        c2 = [event.xdata,event.ydata]
+                        if (c2[0]<c1[0]):
+                            temp_c = c2
+                            c2 = c1
+                            c1 = temp_c
+                        secondclick = True
+                        scan_widget.rect()
+                        firstclick = False
+                        secondclick = False
 
     def chooseClass(self, text):
         global colorName,txt,scan_widget
@@ -277,13 +298,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif text == 'Person1':
             colorName = 'go'
         elif text == 'Person2':
-            colorName = 'yo'
+            colorName = 'ro'
         elif text == 'Other':
             colorName = 'bo'
         scan_widget.training()
 
     def bsave(self):
-        global annotating, cnt,  c1, c2, objx, objy, txt, curr_ptr
+        global annotating, cnt,  c1, c2, objx, objy, txt, curr_ptr, annot, bag_file,data
 
         annotating = False
 
@@ -295,9 +316,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         annot[cnt].samex.pop(curr_ptr)
         annot[cnt].samey.pop(curr_ptr)
 
-        #with open('data.csv', 'w', newline='') as file:
-        #    writer = csv.writer(file)
-        #   writer.writerows(annot)
+        filename = bag_file.replace(".bag","_laser.csv")
+        with open(filename, 'w') as data:
+            write = csv.writer(data)
+            for row in annot:
+                row_ = [row.annotID, row.bbstart, row.bbend, row.listofpointsx, row.listofpointsy, row.samex, row.samey]
+                write.writerow(row_)
+            data.close()
 
 class laserAnn:
 
@@ -322,12 +347,13 @@ class laserAnn:
         self.samex = s1
         self.samey = s2
 
-def run(laserx,lasery):
+def run(laserx,lasery,bagFile):
 
-    global timer,scan_widget,annot,s1,s2
+    global timer,scan_widget,annot,s1,s2,bag_file
 
     timer = QtCore.QTimer(None)
 
+    bag_file = bagFile
     for i in range(len(laserx)):
         s1 = laserx[i].tolist()
         s2 = lasery[i].tolist()
