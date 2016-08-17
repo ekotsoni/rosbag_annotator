@@ -86,14 +86,14 @@ class LS(Window):
 
     def icon(self):
 
-        global cnt,ax,annot, fw, colorName,timer, samex, samey, listofpointsx, listofpointsy, annotID,bbstart,bbend
+        global cnt,ax,annot, fw, colorName,timer, samex, samey, listofpointsx, listofpointsy,annotID,bbstart,bbend
 
         if(cnt<len(annot)):
             ax.clear()
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,'yo')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,'ro')
             fw.draw()
             cnt += 1
         if (cnt == len(annot)):
@@ -122,24 +122,17 @@ class LS(Window):
         global colorName,sx,sy,c1,c2,cnt,objx,objy,s1,s2,fw, ax, curr_ptr,annot,txt
 
         ax.clear()
-        if (txt == 'Person1'):
-            for i in range(len(annot[cnt].samex)):
-                if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'go')
-                    curr_ptr.append(i)
-                    objx.append(annot[cnt].samex[i])
-                    objy.append(annot[cnt].samey[i])
-                else:
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
-        elif (txt == 'Person2'):
-            for i in range(len(annot[cnt].samex)):
-                if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'ro')
-                    curr_ptr.append(i)
-                    objx.append(annot[cnt].samex[i])
-                    objy.append(annot[cnt].samey[i])
-                else:
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
+        for i in range(len(annot[cnt].samex)):
+            if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
+                if (txt == 'Person1'):
+                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
+                elif (txt == 'Person2'):
+                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
+                curr_ptr.append(i)
+                objx.append(annot[cnt].samex[i])
+                objy.append(annot[cnt].samey[i])
+            else:
+                ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
         '''
         for i in range(len(annot[cnt].samex)):
             if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
@@ -294,6 +287,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         firstclick = False
                         secondclick = False
 
+    '''
+    1. Na krataei clickstart kai clickend
+    2. Na antistixizei ID1, ID2,...
+    3. Na zwgrafizei ola auta ta ID kai meta ta upoloipa simeia
+    '''
 
     def chooseClass(self, text):
         global colorName,txt,scan_widget
@@ -312,6 +310,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         global annotating, cnt,  c1, c2, objx, objy, txt, curr_ptr, annot, bag_file,data
 
         annotating = False
+
+        '''
+        prepei na apo9ikevw kai to xrwma pou antistoixei se ka9e ID
+        '''
 
         annot[cnt].bbstart.append(c1)
         annot[cnt].bbend.append(c2)
@@ -414,38 +416,51 @@ def run(laserx,lasery,bagFile):
                         if row[0][i] == "":
                             row[0] = []
                             break
+                        '''
                         else:
-                            row[0][i] = float(row[0][i])
+                            row[0][i] = row[0][i]
+                            #row[0][i] = float(row[0][i])
+                        '''
                     for i in range(0, len(row[1])):
                         if row[1][i] == "":
                             row[1] = []
                             break
+                        '''
                         else:
                             row[1][i] = float(row[1][i])
+                        '''
                     for i in range(0, len(row[2])):
                         if row[2][i] == "":
                             row[2] = []
                             break
+                        '''
                         else:
                             row[2][i] = float(row[2][i])
+                        '''
                     for i in range(0, len(row[3])):
                         if row[3][i] == "":
                             row[3] = []
                             break
+                        '''
                         else:
                             row[3][i] = float(row[3][i])
+                        '''
                     for i in range(0, len(row[4])):
                         if row[4][i] == "":
                             row[4] = []
                             break
+                        '''
                         else:
                             row[4][i] = float(row[4][i])
+                        '''
                     for i in range(0, len(row[5])):
                         if row[5][i] == "":
                             row[5] = []
                             break
+                        '''
                         else:
                             row[5][i] = float(row[5][i])
+                        '''
                     for i in range(0, len(row[6])):
                         if row[6][i] == "":
                             row[6] = []
