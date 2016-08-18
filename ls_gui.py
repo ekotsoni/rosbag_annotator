@@ -119,18 +119,28 @@ class LS(Window):
 
     def training(self):
 
-        global colorName,sx,sy,c1,c2,cnt,objx,objy,s1,s2,fw, ax, curr_ptr,annot,txt
+        global colorName,sx,sy,c1,c2,cnt,objx,objy,s1,s2,fw, ax, curr_ptr,annot,txt,fig 
 
         ax.clear()
         for i in range(len(annot[cnt].samex)):
             if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
                 if (txt == 'Person1'):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
+                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'go')
                 elif (txt == 'Person2'):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
+                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'ro')
                 curr_ptr.append(i)
                 objx.append(annot[cnt].samex[i])
                 objy.append(annot[cnt].samey[i])
+                #Na elenxei an 9a valw kai deutero ID
+                annotating = False
+                firstclick = False 
+                secondclick = False 
+            #elif (annot[cnt].listofpointsx[i] != []):
+            elif False:
+                if (annot[cnt].annotID == 'Person1'):
+                    ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
+                elif (annot[cnt].annotID == 'Person2'):
+                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
             else:
                 ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
         '''
@@ -226,7 +236,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey, 'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
+                #ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
+                if (annot[cnt].annotID == 'Person1'):
+                    ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
+                if (annot[cnt].annotID == 'Person2'):
+                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
             fw.draw()
         else:
             ax.clear()
@@ -240,7 +254,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
+                #ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
+                if (annot[cnt].annotID == 'Person1'):
+                    ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
+                if (annot[cnt].annotID == 'Person2'):
+                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
             fw.draw()
         else:
             ax.clear()
@@ -312,7 +330,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         annotating = False
 
         '''
-        prepei na apo9ikevw kai to xrwma pou antistoixei se ka9e ID
+        prepei na apo9ikeuw kai to xrwma pou antistoixei se ka9e ID
         '''
 
         annot[cnt].bbstart.append(c1)
