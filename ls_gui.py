@@ -21,6 +21,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 
+from enum import Enum
+
 progname = os.path.basename(sys.argv[0])
 
 #Arxikopoihsh global timwn
@@ -62,8 +64,6 @@ class Window(FigureCanvas):
 
         fig = Figure(figsize=(width, height), dpi=dpi)
 
-        #axes1=fig.add_subplot(211)
-        #axes2=fig.add_subplot(212)
         ax = fig.add_subplot(111)
 
         FigureCanvas.__init__(self, fig)
@@ -136,23 +136,13 @@ class LS(Window):
                 firstclick = False 
                 secondclick = False 
             #elif (annot[cnt].listofpointsx[i] != []):
-            elif False:
+            elif False: #sun9iki pou 9a elenxei an uparxoun simeia dilwmena se kapoio ID
                 if (annot[cnt].annotID == 'Person1'):
                     ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
                 elif (annot[cnt].annotID == 'Person2'):
                     ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
             else:
                 ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
-        '''
-        for i in range(len(annot[cnt].samex)):
-            if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
-                ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],colorName)
-                curr_ptr.append(i)
-                objx.append(annot[cnt].samex[i])
-                objy.append(annot[cnt].samey[i])
-            else:
-                ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
-        '''
         fw.draw()
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -266,7 +256,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def bstop(self):
         global cnt,timer,ax,fw
-        cnt=0
+        cnt = 0
         timer.stop()
         ax.clear()
         fw.draw()
@@ -305,12 +295,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         firstclick = False
                         secondclick = False
 
-    '''
-    1. Na krataei clickstart kai clickend
-    2. Na antistixizei ID1, ID2,...
-    3. Na zwgrafizei ola auta ta ID kai meta ta upoloipa simeia
-    '''
-
     def chooseClass(self, text):
         global colorName,txt,scan_widget
         txt=text
@@ -328,10 +312,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         global annotating, cnt,  c1, c2, objx, objy, txt, curr_ptr, annot, bag_file,data
 
         annotating = False
-
-        '''
-        prepei na apo9ikeuw kai to xrwma pou antistoixei se ka9e ID
-        '''
 
         annot[cnt].bbstart.append(c1)
         annot[cnt].bbend.append(c2)
