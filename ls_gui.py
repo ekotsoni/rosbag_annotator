@@ -14,7 +14,7 @@ matplotlib.use('Qt5Agg')
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QUrl, pyqtSignal, QFile, QIODevice
 from PyQt5.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QPushButton,
-QSizePolicy, QVBoxLayout, QWidget)
+QSizePolicy, QVBoxLayout, QWidget,QLineEdit, QInputDialog)
 
 from numpy import arange
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -46,13 +46,18 @@ annotating = False
 firstclick = False
 secondclick = False
 thirdclick = False
+colours = ['#FF69B4','#FFFF00','#CD853F','#000000','#8A2BE2','#00BFFF','#ADFF2F','#8B0000']
+colour_index = 0
 c1 = []
 c2 = []
 colorName = None
 txt = None
 annot = []
-curr_ptr = []
+#curr_ptr = []
 data = None
+classes = None
+le = None
+ob = None
 
 class Window(FigureCanvas):
 
@@ -93,7 +98,7 @@ class LS(Window):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,'ro')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=colorName,marker='o')
             fw.draw()
             cnt += 1
         if (cnt == len(annot)):
@@ -106,50 +111,43 @@ class LS(Window):
 
         global cnt, ax, c1, c2, fw, cnt, firstclick, secondclick
 
-        if(cnt<len(annot)):
-            ax.axis('equal')
-            #if len(c1)>0:
-            if secondclick:
-                ax.plot([c1[0],c2[0]],[c1[1],c1[1]],'r')
-                ax.plot([c2[0],c2[0]],[c1[1],c2[1]],'r')
-                ax.plot([c2[0],c1[0]],[c2[1],c2[1]],'r')
-                ax.plot([c1[0],c1[0]],[c2[1],c1[1]],'r')
-            fw.draw()
-
+        ax.axis('equal')
+        ax.plot([c1[0],c2[0]],[c1[1],c1[1]],'r')
+        ax.plot([c2[0],c2[0]],[c1[1],c2[1]],'r')
+        ax.plot([c2[0],c1[0]],[c2[1],c2[1]],'r')
+        ax.plot([c1[0],c1[0]],[c2[1],c1[1]],'r')
+        fw.draw()
 
     def training(self):
 
-        global colorName,sx,sy,c1,c2,cnt,objx,objy,s1,s2,fw, ax, curr_ptr,annot,txt,fig 
+        global colorName,sx,sy,c1,c2,cnt,objx,objy,s1,s2,fw, ax, curr_ptr,annot,txt,fig, colour_index, colours, ob
 
         ax.clear()
         for i in range(len(annot[cnt].samex)):
-            if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):
-                if (txt == 'Person1'):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'go')
-                elif (txt == 'Person2'):
-                    ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'ro')
-                curr_ptr.append(i)
+            if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):#TODO add listofpoints check
+                colorName = colours[colour_index]
+                print ob
+                print colorName
+                ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],color=colorName,marker='o')
+                #curr_ptr.append(i)
                 objx.append(annot[cnt].samex[i])
                 objy.append(annot[cnt].samey[i])
                 #Na elenxei an 9a valw kai deutero ID
                 annotating = False
                 firstclick = False 
                 secondclick = False 
-            #elif (annot[cnt].listofpointsx[i] != []):
-            elif False: #sun9iki pou 9a elenxei an uparxoun simeia dilwmena se kapoio ID
-                if (annot[cnt].annotID == 'Person1'):
-                    ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
-                elif (annot[cnt].annotID == 'Person2'):
-                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
             else:
                 ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
         fw.draw()
+        colour_index+=1
+        if (colour_index == (len(colours))):
+           colour_index = 0 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
 
-        global scan_widget
+        global scan_widget, classes, le
 
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -169,12 +167,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         stopButton = QPushButton("Stop")
         annotationButton = QPushButton("Annotation")
         saveButton = QPushButton("Save")
+        le = QLineEdit(self)
+        le.setDragEnabled(True)
+        addButton = QPushButton('Add', self)
 
         classes = QComboBox()
         classes.addItem('Classes')
-        classes.addItem('Person1')
-        classes.addItem('Person2')
-        classes.addItem('Other')
 
         buttonLayout = QVBoxLayout()
         buttonLayout.addWidget(playButton)
@@ -189,6 +187,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         classLayout = QVBoxLayout()
         classLayout.addWidget(classes)
+        classLayout.addWidget(le)
+        classLayout.addWidget(addButton)
         classLayout.setAlignment(Qt.AlignTop)
 
         layout = QHBoxLayout(self.main_widget)
@@ -205,6 +205,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         annotationButton.clicked.connect(self.bannotation)
         saveButton.clicked.connect(self.bsave)
         classes.activated[str].connect(self.chooseClass)
+        addButton.clicked.connect(self.showObject)
+
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
@@ -226,11 +228,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey, 'bo')
             if not annot[cnt].listofpointsx == []:
-                #ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
-                if (annot[cnt].annotID == 'Person1'):
-                    ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
-                if (annot[cnt].annotID == 'Person2'):
-                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=colorName,marker='o')
             fw.draw()
         else:
             ax.clear()
@@ -244,11 +242,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                #ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,colorName)
-                if (annot[cnt].annotID == 'Person1'):
-                    ax.plot(annot[cnt].listofpointsx[i],annot[cnt].listofpointsy[i], 'go')
-                if (annot[cnt].annotID == 'Person2'):
-                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy[i], 'ro')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=colorName,marker='o')
             fw.draw()
         else:
             ax.clear()
@@ -295,17 +289,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         firstclick = False
                         secondclick = False
 
+    def showObject(self):
+        global classes, le,ob
+        classes.addItem(le.text())
+        ob=le.text()
+
     def chooseClass(self, text):
-        global colorName,txt,scan_widget
-        txt=text
-        if text == 'Selections':
-            print 'Please, choose class'
-        elif text == 'Person1':
-            colorName = 'go'
-        elif text == 'Person2':
-            colorName = 'ro'
-        elif text == 'Other':
-            colorName = 'bo'
+        global scan_widget
         scan_widget.training()
 
     def bsave(self):
@@ -315,7 +305,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         annot[cnt].bbstart.append(c1)
         annot[cnt].bbend.append(c2)
-        annot[cnt].annotID.append(txt)
+        annot[cnt].annotID.append(colorName)
         annot[cnt].listofpointsx.append(objx)
         annot[cnt].listofpointsy.append(objy)
         annot[cnt].samex = [x for x in annot[cnt].samex if x not in annot[cnt].listofpointsx]
@@ -344,13 +334,6 @@ class laserAnn:
         self.listofpointsy = []
         self.annotID = []
 
-        '''
-        self.bbstart.append(c1)
-        self.bbend.append(c2)
-        self.listofpointsx.append(objx)
-        self.listofpointsy.append(objy)
-        self.annotID.append(txt)
-        '''
         if bbstart_ == None:
             self.bbstart = []
         else:
@@ -390,7 +373,6 @@ def run(laserx,lasery,bagFile):
     bag_file = bagFile
     filename = bag_file.replace(".bag", "_laser.csv")
     if os.path.isfile(filename):
-    #if False:
         with open(filename, 'rb') as data:
             if os.path.getsize(filename)>1:
                 read = csv.reader(data)
@@ -414,69 +396,38 @@ def run(laserx,lasery,bagFile):
                         if row[0][i] == "":
                             row[0] = []
                             break
-                        '''
-                        else:
-                            row[0][i] = row[0][i]
-                            #row[0][i] = float(row[0][i])
-                        '''
                     for i in range(0, len(row[1])):
                         if row[1][i] == "":
                             row[1] = []
                             break
-                        '''
-                        else:
-                            row[1][i] = float(row[1][i])
-                        '''
                     for i in range(0, len(row[2])):
                         if row[2][i] == "":
                             row[2] = []
                             break
-                        '''
-                        else:
-                            row[2][i] = float(row[2][i])
-                        '''
                     for i in range(0, len(row[3])):
                         if row[3][i] == "":
                             row[3] = []
                             break
-                        '''
-                        else:
-                            row[3][i] = float(row[3][i])
-                        '''
                     for i in range(0, len(row[4])):
                         if row[4][i] == "":
                             row[4] = []
                             break
-                        '''
-                        else:
-                            row[4][i] = float(row[4][i])
-                        '''
                     for i in range(0, len(row[5])):
                         if row[5][i] == "":
                             row[5] = []
                             break
-                        '''
-                        else:
-                            row[5][i] = float(row[5][i])
-                        '''
                     for i in range(0, len(row[6])):
                         if row[6][i] == "":
                             row[6] = []
                             break
                         else:
                             row[6][i] = str(row[6][i])
+                            '''
                             if row[6] == 'Person1':
                                 colorName = 'go'
                             elif row[6] == 'Person2':
                                 colorName = 'ro'
-                    '''
-                    print row[0]
-                    print row[1]
-                    print row[2]
-                    print row[3]
-                    print row[4]
-                    print row[5]
-                    '''
+                            '''
                     #print row[6]
 
                     la = laserAnn(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
