@@ -53,11 +53,11 @@ c2 = []
 colorName = None
 txt = None
 annot = []
-#curr_ptr = []
 data = None
 classes = None
 le = None
 ob = None
+selections = []
 
 class Window(FigureCanvas):
 
@@ -98,7 +98,7 @@ class LS(Window):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=colorName,marker='o')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
             fw.draw()
             cnt += 1
         if (cnt == len(annot)):
@@ -120,28 +120,27 @@ class LS(Window):
 
     def training(self):
 
-        global colorName,sx,sy,c1,c2,cnt,objx,objy,s1,s2,fw, ax, curr_ptr,annot,txt,fig, colour_index, colours, ob
+        global colorName,c1,c2,cnt,objx,objy,fw, ax,annot,fig, colour_index, colours, ob,annotating,firstclick,secondclick,samex, samey, listofpointsx, listofpointsy,annotID
 
         ax.clear()
         for i in range(len(annot[cnt].samex)):
             if ((annot[cnt].samex[i] >= c1[0]) and (annot[cnt].samex[i] <= c2[0]) and ((annot[cnt].samey[i] >= c2[1]) and (annot[cnt].samey[i] <= c1[1]))):#TODO add listofpoints check
                 colorName = colours[colour_index]
-                print ob
-                print colorName
                 ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],color=colorName,marker='o')
-                #curr_ptr.append(i)
                 objx.append(annot[cnt].samex[i])
                 objy.append(annot[cnt].samey[i])
-                #Na elenxei an 9a valw kai deutero ID
                 annotating = False
                 firstclick = False 
                 secondclick = False 
+                if not annot[cnt].listofpointsx == []:
+                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
             else:
                 ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
+            colour_index+=1
+            if (colour_index == (len(colours))):
+               colour_index = 0 
         fw.draw()
-        colour_index+=1
-        if (colour_index == (len(colours))):
-           colour_index = 0 
+
 
 class ApplicationWindow(QtWidgets.QMainWindow):
 
@@ -221,28 +220,29 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         timer.stop()
 
     def bprevious(self):
-        global cnt,ax,fw,annot,colorName,annot
-        if (cnt>0):
+        global cnt,ax,fw,annot,samex, samey, listofpointsx, listofpointsy,annotID
+        if (cnt > 0):
             cnt = cnt-1
             ax.clear()
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey, 'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=colorName,marker='o')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
             fw.draw()
         else:
             ax.clear()
             fw.draw()
 
     def bnext(self):
-        global cnt,ax,fw,colorName, annot
+        global cnt,ax,fw, annot,samex, samey, listofpointsx, listofpointsy,annotID, colour_index
         if (cnt<len(annot)):
             cnt = cnt+1
             ax.clear()
             ax.axis('equal')
+            colour_index = 0
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=colorName,marker='o')
+                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
             fw.draw()
         else:
             ax.clear()
@@ -285,14 +285,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     if event.inaxes is not None:
                         ax.clear()
                         ax.plot(annot[cnt].samex,annot[cnt].samey, 'bo')
+                        if not annot[cnt].listofpointsx == []:
+                            ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
                         fw.draw()
                         firstclick = False
                         secondclick = False
 
     def showObject(self):
-        global classes, le,ob
-        classes.addItem(le.text())
-        ob=le.text()
+        global classes, le,ob,selections
+        if le.text() not in selections:
+            classes.addItem(le.text())
+            ob=le.text()
+            selections.append(ob)
 
     def chooseClass(self, text):
         global scan_widget
@@ -396,38 +400,56 @@ def run(laserx,lasery,bagFile):
                         if row[0][i] == "":
                             row[0] = []
                             break
+                        '''
+                        else:
+                            row[0][i] = long(row[0][i])
+                        '''
                     for i in range(0, len(row[1])):
                         if row[1][i] == "":
                             row[1] = []
                             break
+                        '''
+                        else:
+                            row[1][i] = long(row[1][i])
+                        '''
                     for i in range(0, len(row[2])):
                         if row[2][i] == "":
                             row[2] = []
                             break
+                        '''
+                        else:
+                            row[2][i] = long(row[2][i])
+                        '''
                     for i in range(0, len(row[3])):
                         if row[3][i] == "":
                             row[3] = []
                             break
+                        '''
+                        else:
+                            row[3][i] = long(row[3][i])
+                        '''
                     for i in range(0, len(row[4])):
                         if row[4][i] == "":
                             row[4] = []
                             break
+                        '''
+                        else:
+                            row[4][i] = long(row[4][i])
+                        '''
                     for i in range(0, len(row[5])):
                         if row[5][i] == "":
                             row[5] = []
                             break
+                        '''
+                        else:
+                            row[5][i] = long (row[5][i])
+                        '''
                     for i in range(0, len(row[6])):
                         if row[6][i] == "":
                             row[6] = []
                             break
                         else:
                             row[6][i] = str(row[6][i])
-                            '''
-                            if row[6] == 'Person1':
-                                colorName = 'go'
-                            elif row[6] == 'Person2':
-                                colorName = 'ro'
-                            '''
                     #print row[6]
 
                     la = laserAnn(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
