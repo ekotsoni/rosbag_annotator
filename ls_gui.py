@@ -98,7 +98,8 @@ class LS(Window):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
+                for j in range(len(annot[cnt].annotID)):
+                    ax.plot(annot[cnt].listofpointsx[j],annot[cnt].listofpointsy[j],color=annot[cnt].annotID[j],marker='o')
             fw.draw()
             cnt += 1
         if (cnt == len(annot)):
@@ -130,16 +131,17 @@ class LS(Window):
                 objx.append(annot[cnt].samex[i])
                 objy.append(annot[cnt].samey[i])
                 annotating = False
-                firstclick = False 
-                secondclick = False 
+                firstclick = False
+                secondclick = False
                 if not annot[cnt].listofpointsx == []:
-                    ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
+                    for j in range(len(annot[cnt].annotID)):
+                        ax.plot(annot[cnt].listofpointsx[j],annot[cnt].listofpointsy[j],color=annot[cnt].annotID[j],marker='o')
             else:
                 ax.plot(annot[cnt].samex[i],annot[cnt].samey[i],'bo')
-            colour_index+=1
-            if (colour_index == (len(colours))):
-               colour_index = 0 
         fw.draw()
+        colour_index+=1
+        if (colour_index == (len(colours))):
+           colour_index = 0 
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -227,7 +229,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.axis('equal')
             ax.plot(annot[cnt].samex,annot[cnt].samey, 'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
+                for j in range(len(annot[cnt].annotID)):
+                    ax.plot(annot[cnt].listofpointsx[j],annot[cnt].listofpointsy[j],color=annot[cnt].annotID[j],marker='o')
             fw.draw()
         else:
             ax.clear()
@@ -242,7 +245,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             colour_index = 0
             ax.plot(annot[cnt].samex,annot[cnt].samey,'bo')
             if not annot[cnt].listofpointsx == []:
-                ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
+                for j in range(len(annot[cnt].annotID)):
+                    ax.plot(annot[cnt].listofpointsx[j],annot[cnt].listofpointsy[j],color=annot[cnt].annotID[j],marker='o')
             fw.draw()
         else:
             ax.clear()
@@ -286,7 +290,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         ax.clear()
                         ax.plot(annot[cnt].samex,annot[cnt].samey, 'bo')
                         if not annot[cnt].listofpointsx == []:
-                            ax.plot(annot[cnt].listofpointsx,annot[cnt].listofpointsy,color=annot[cnt].annotID[0],marker='o')
+                            for j in range(len(annot[cnt].annotID)):
+                                ax.plot(annot[cnt].listofpointsx[j],annot[cnt].listofpointsy[j],color=annot[cnt].annotID[j],marker='o')
                         fw.draw()
                         firstclick = False
                         secondclick = False
@@ -299,11 +304,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             selections.append(ob)
 
     def chooseClass(self, text):
-        global scan_widget
-        scan_widget.training()
+        global scan_widget,txt
+        txt = text
+        if (text != 'Classes'):
+            scan_widget.training()
 
     def bsave(self):
-        global annotating, cnt,  c1, c2, objx, objy, txt, curr_ptr, annot, bag_file,data
+        global annotating, cnt, c1, c2, objx, objy, txt, curr_ptr, annot, bag_file,data
 
         annotating = False
 
