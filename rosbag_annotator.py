@@ -20,7 +20,7 @@ import argparse
 import textwrap
 import math
 #import qt_laserscan
-import ls_gui
+import newrosgui
 
 
 programmName = os.path.basename(sys.argv[0])
@@ -123,4 +123,4 @@ if __name__ =='__main__':
 	#Open bag and get framerate	
 	play_bag_file(bag_file, csv_file)
 
-	ls_gui.run(sx, sy, bag_file)
+	newrosgui.run(sx, sy, bag_file)
