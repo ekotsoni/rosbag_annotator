@@ -152,13 +152,11 @@ class LS(Window):
                 write.writerow(row_)
             data.close()
 
-
-
 class ApplicationWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
 
-        global scan_widget, classes, le
+        global scan_widget, classes, le, selections
 
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -235,7 +233,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             scan_widget.drawLaserScan()
 
     def bnext(self):
-        global cnt, annot, ok, scan_widget,colour_index
+        global cnt, annot, ok, scan_widget,colour_index,samex
         colour_index = 0
         if (cnt<len(annot)):
             cnt = cnt+1
@@ -298,7 +296,67 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             annot[cnt].annotID.append(txt)
             colour_index = selections.index(txt)%(len(colours))
             scan_widget.training()
+'''
+    # >> Annotate Person
+    def Person(self, action):
+        global txt, colorName, chartFig
 
+        text = action.text()
+
+        if text == 'Add New Person':
+            self.newPerson()
+        else:
+            txt = 'Person::' + text
+            ok = 'Yes'
+            scan_widget.drawLaserScan()
+
+
+    # >> Add new person
+    def newPerson(self):
+        self.new = MyPopup()
+        self.new.setGeometry(QRect(500, 100, 300, 100))
+        self.new.show()
+
+class MyPopup(QWidget):
+    def __init__(self):
+
+        QWidget.__init__(self)
+        self.setWindowTitle('Add new Person')
+        self.main_widget = QtWidgets.QWidget(self)
+        self.speakerID = QLineEdit(self)
+        self.OK = QPushButton("OK", self)
+
+    # Draw new Person window
+    def paintEvent(self, e):
+        self.personID.setPlaceholderText('Person...')
+        self.personID.setMinimumWidth(100)
+        self.personID.setEnabled(True)
+
+        self.personID.move(90, 15)
+        self.OK.move(115, 60)
+
+        self.speakerID.textChanged.connect(self.personLabel)
+        self.OK.clicked.connect(self.closePerson)
+
+        self.OK.show()
+        self.personID.show()
+
+    def personLabel(self,text):
+        global txt
+        txt = 'Person::' + text 
+
+    # Close and save new Person ID
+    def closePerson(self):
+        global txt
+        global fig, chartFig
+        if txt != 'Add New Person':
+            txt = 'Person::' + self.speakerID.text()
+            self.OK.clicked.disconnect() 
+            self.close()
+
+            ok = 'Yes'
+            scan_widget.drawLaserScan()
+'''
 class laserAnn:
 
     global c1,c2, objx,objy, s1,s2, txt

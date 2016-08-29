@@ -148,7 +148,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
 
-        global scan_widget, classes, le
+        global scan_widget, classes, le, selections
 
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -174,6 +174,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         classes = QComboBox()
         classes.addItem('Classes')
+        
 
         buttonLayout = QVBoxLayout()
         buttonLayout.addWidget(playButton)
@@ -335,7 +336,7 @@ class laserAnn:
 
     global c1,c2, objx,objy, s1,s2, txt
 
-    def __init__(self, bbstart_=None, bbend_=None, samex_=None, samey_=None, listofpointsx_=None,listofpointsy_=None, annotID_=None): #TODO fix constructor parameters
+    def __init__(self, bbstart_=None, bbend_=None, samex_=None, samey_=None, listofpointsx_=None,listofpointsy_=None, annotID_=None):
 
         self.bbstart = []
         self.bbend = []

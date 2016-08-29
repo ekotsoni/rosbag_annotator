@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 import argparse
 import textwrap
 import math
-#import qt_laserscan
 import newrosgui
 
 
@@ -30,6 +29,7 @@ sx = []
 sy = []
 
 def parse_arguments():
+
 	parser = argparse.ArgumentParser(
 		prog='PROG',
 		formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -56,6 +56,7 @@ def parse_arguments():
 	return parser.parse_args()
 
 def play_bag_file(bag_file, csv_file):
+
 	global laserDistances, sx, sy, theta
 
 	compressed = False
@@ -66,28 +67,6 @@ def play_bag_file(bag_file, csv_file):
 	messages =  topic['messages']
 	duration = info_dict['duration']
 	topic_type = topic['type']
-
-	#Messages for test
-	print "Script parameters: ","\n\t- Bag file: ", bag_file, "\n\t- Topic: ", input_topic, 
-	print "\nRosbag topics found: "
-	for top in topics:
-		print "\t- ", top["topic"], "\n\t\t-Type: ", topic["type"],"\n\t\t-Fps: ", topic["frequency"]
-
-	#Checking if the topic is compressed
-	if 'CompressedImage' in topic_type:
-		compressed = True
-	else:
-		compressed = False
-
-	#Get framerate
-
-	bridge = CvBridge()
-	image_buff = []
-	time_buff = []
-	box_buff = []
-	counter = 0
-	buff_size = messages
-	file_obj = open(feature_file, 'a')
 
 	#Loop through the rosbag
 	for topic, msg, t in bag.read_messages(topics=[input_topic]):
